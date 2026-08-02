@@ -112,21 +112,133 @@ GET {{baseURL}}/api/auth/me
 Authorization: Bearer {{authToken}}
 
 ###
-### 8. Get Current User - No Token (Should Fail - 401)
+### 8. Update User Profile (Success - Update fullName)
+PUT {{baseURL}}/api/auth/profile
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "fullName": "John Doe Updated"
+}
+
+###
+### 9. Update User Profile (Success - Update phone)
+PUT {{baseURL}}/api/auth/profile
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "phone": "+1999888777"
+}
+
+###
+### 10. Update User Profile (Success - Update both fields)
+PUT {{baseURL}}/api/auth/profile
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "fullName": "John Doe Final",
+  "phone": "+1555666777"
+}
+
+###
+### 11. Update Profile - No Token (Should Fail - 401)
+PUT {{baseURL}}/api/auth/profile
+Content-Type: {{contentType}}
+
+{
+  "fullName": "Should Fail"
+}
+
+###
+### 12. Update Profile - Invalid Token (Should Fail - 401)
+PUT {{baseURL}}/api/auth/profile
+Authorization: Bearer invalid.token.here
+Content-Type: {{contentType}}
+
+{
+  "fullName": "Should Fail"
+}
+
+###
+### 13. Update Profile - Try to Update Email (Should Fail - 400)
+PUT {{baseURL}}/api/auth/profile
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "email": "newemail@example.com"
+}
+
+###
+### 14. Update Profile - Try to Update Password (Should Fail - 400)
+PUT {{baseURL}}/api/auth/profile
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "password": "NewPassword123"
+}
+
+###
+### 15. Update Profile - Try to Update Role (Should Fail - 400)
+PUT {{baseURL}}/api/auth/profile
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "role": "admin"
+}
+
+###
+### 16. Update Profile - No Fields (Should Fail - 400)
+PUT {{baseURL}}/api/auth/profile
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{}
+
+###
+### 17. Update Profile - Invalid Phone Format (Should Fail - 400)
+PUT {{baseURL}}/api/auth/profile
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "phone": "invalid-phone"
+}
+
+###
+### 18. Update Profile - Empty fullName (Should Fail - 400)
+PUT {{baseURL}}/api/auth/profile
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "fullName": ""
+}
+
+###
+### 19. Get Current User - No Token (Should Fail - 401)
 GET {{baseURL}}/api/auth/me
 
 ###
-### 9. Get Current User - Invalid Token Format (Should Fail - 401)
+### 19. Get Current User - No Token (Should Fail - 401)
+GET {{baseURL}}/api/auth/me
+
+###
+### 20. Get Current User - Invalid Token Format (Should Fail - 401)
 GET {{baseURL}}/api/auth/me
 Authorization: InvalidFormat
 
 ###
-### 10. Get Current User - Invalid Token (Should Fail - 401)
+### 21. Get Current User - Invalid Token (Should Fail - 401)
 GET {{baseURL}}/api/auth/me
 Authorization: Bearer invalid.token.here
 
 ###
-### 11. Get Current User - Empty Token (Should Fail - 401)
+### 22. Get Current User - Empty Token (Should Fail - 401)
 GET {{baseURL}}/api/auth/me
 Authorization: Bearer 
 

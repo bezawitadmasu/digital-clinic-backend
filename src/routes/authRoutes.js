@@ -8,6 +8,7 @@
  * - POST /api/auth/register - Register a new user
  * - POST /api/auth/login - Login existing user
  * - GET /api/auth/me - Get current user profile (protected)
+ * - PUT /api/auth/profile - Update user profile (protected)
  */
 
 const express = require('express');
@@ -16,6 +17,10 @@ const { authMiddleware } = require('../middleware/authMiddleware');
 
 // Create Express router
 const router = express.Router();
+
+// ======================
+// Public Routes
+// ======================
 
 /**
  * @route   POST /api/auth/register
@@ -33,6 +38,10 @@ router.post('/register', authController.register.bind(authController));
  */
 router.post('/login', authController.login.bind(authController));
 
+// ======================
+// Protected Routes
+// ======================
+
 /**
  * @route   GET /api/auth/me
  * @desc    Get current user profile
@@ -40,6 +49,15 @@ router.post('/login', authController.login.bind(authController));
  * @header  Authorization: Bearer <token>
  */
 router.get('/me', authMiddleware, authController.getCurrentUser.bind(authController));
+
+/**
+ * @route   PUT /api/auth/profile
+ * @desc    Update user profile (fullName and phone only)
+ * @access  Private (requires authentication)
+ * @header  Authorization: Bearer <token>
+ * @body    { fullName?, phone? }
+ */
+router.put('/profile', authMiddleware, authController.updateProfile.bind(authController));
 
 // Export the router
 module.exports = router;

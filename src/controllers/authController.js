@@ -198,6 +198,132 @@ class AuthController {
       next(error);
     }
   }
+
+  /**
+   * Update User Profile
+   * 
+   * PUT /api/auth/profile
+   * 
+   * Requires: Authorization: Bearer <token>
+   * 
+   * Request Body:
+   * {
+   *   "fullName": "Updated Name",    // Optional
+   *   "phone": "+1234567890"         // Optional
+   * }
+   * 
+   * Updates the authenticated user's profile information.
+   * Only fullName and phone can be updated.
+   * Email, password, and role cannot be changed through this endpoint.
+   * 
+   * @param {Object} req - Express request object (with req.user from authMiddleware)
+   * @param {Object} res - Express response object
+   * @param {Function} next - Express next middleware function
+   */
+  async updateProfile(req, res, next) {
+    try {
+      // ============================================
+      // Step 1: Check for Restricted Field Updates
+      // ============================================
+      
+      // Check if user is trying to update restricted fields
+      // This validation must come FIRST to prevent security issues
+      const restrictedFields = ['email', 'password', 'role', 'isActive', '_id'];
+      const attemptedRestrictedUpdate = restrictedFields.some(field => req.body[field] !== undefined);
+
+      if (attemptedRestrictedUpdate) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot update email, password, role, or account status through this endpoint'
+        });
+      }
+
+      // ============================================
+      // Step 2: Extract Allowed Fields
+      // ============================================
+      
+      // Extract only the allowed fields from request body
+      const { fullName, phone } = req.body;
+
+      // ============================================
+      // Step 3: Validate At Least One Field Provided
+      // ============================================
+      
+      // Validate that at least one allowed field is provided
+      if (!fullName && !phone) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please provide at least one field to update (fullName or phone)'
+        });
+      }
+
+      // ============================================
+      // Step 4: Prepare Update Data
+      // ============================================
+      
+      // Prepare update data object with only the provided fields
+      const updateData = {};
+      if (fullName !== undefined) updateData.fullName = fullName;
+      if (phone !== undefined) updateData.phone = phone;
+
+      // ============================================
+      // Step 5: Update Profile
+      // ============================================
+      
+      // Get user ID from authenticated user (set by authMiddleware)
+      const userId = req.user._id;
+
+      // Call service to update profile
+      const updatedUser = await authService.updateProfile(userId, updateData);
+
+      // Send success response
+      res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully',
+        data: {
+          user: updatedUser
+        }
+      });
+
+    } catch (error) {
+      // Handle not found error (404)
+      if (error.statusCode === 404) {
+        return res.status(404).json({
+          success: false,
+          message: error.message
+        });
+      }
+
+      // Handle forbidden error (403)
+      if (error.statusCode === 403) {
+        return res.status(403).json({
+          success: false,
+          message: error.message
+        });
+      }
+
+      // Handle validation errors from Mongoose
+      if (error.name === 'ValidationError') {
+        const messages = Object.values(error.errors).map(err => err.message);
+        return res.status(400).json({
+          success: false,
+          message: 'Validation failed',
+          errors: messages
+        });
+      }
+
+      // Handle bad request errors (400)
+      if (error.statusCode === 400) {
+        return res.status(400).json({
+          success: false,
+          message: error.message
+        });
+      }
+
+      // Pass other errors to global error handler
+      next(error);
+    }
+  }
 }
 
 // Export a singleton instance

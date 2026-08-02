@@ -201,6 +201,67 @@ class AuthService {
 
     return user.toSafeObject();
   }
+
+  /**
+   * Update User Profile
+   * 
+   * Updates user's profile information (fullName and phone only).
+   * Email, password, and role cannot be updated through this method.
+   * 
+   * @param {string} userId - User's MongoDB ObjectId
+   * @param {Object} updateData - Data to update
+   * @param {string} [updateData.fullName] - Updated full name
+   * @param {string} [updateData.phone] - Updated phone number
+   * @returns {Promise<Object>} Updated user object without password
+   * @throws {Error} If user is not found or validation fails
+   */
+  async updateProfile(userId, updateData) {
+    // Find user by ID
+    const user = await User.findById(userId);
+
+    if (!user) {
+      const error = new Error('User not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Check if user account is active
+    if (!user.isActive) {
+      const error = new Error('Cannot update profile. Account is deactivated.');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    // Only allow updating fullName and phone
+    // Explicitly prevent updating email, password, role, isActive
+    const allowedFields = ['fullName', 'phone'];
+    const updates = {};
+
+    // Filter and validate allowed fields
+    allowedFields.forEach(field => {
+      if (updateData[field] !== undefined) {
+        updates[field] = updateData[field];
+      }
+    });
+
+    // Check if there are any valid fields to update
+    if (Object.keys(updates).length === 0) {
+      const error = new Error('No valid fields to update. Only fullName and phone can be updated.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Update user fields
+    Object.keys(updates).forEach(key => {
+      user[key] = updates[key];
+    });
+
+    // Save updated user (triggers Mongoose validation)
+    await user.save();
+
+    // Return updated user without password
+    return user.toSafeObject();
+  }
 }
 
 // Export a singleton instance
