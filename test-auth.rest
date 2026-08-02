@@ -1,0 +1,229 @@
+###
+# Digital Clinic Authentication API Tests
+# Use this file with REST Client extension in VS Code
+# Or copy the requests to Postman/Insomnia
+###
+
+### Variables
+@baseURL = http://localhost:5000
+@contentType = application/json
+
+# Save the token from login/register response and paste it here
+@authToken = your_token_here
+
+### Health Check
+GET {{baseURL}}
+
+### API Info
+GET {{baseURL}}/api
+
+###
+### ============================================
+### REGISTRATION TESTS
+### ============================================
+###
+
+### 1. Register Patient User
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "fullName": "John Doe",
+  "email": "john.doe@example.com",
+  "password": "SecurePass123",
+  "phone": "+1234567890",
+  "role": "patient"
+}
+
+###
+### 2. Register Doctor User
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "fullName": "Dr. Sarah Johnson",
+  "email": "sarah.johnson@example.com",
+  "password": "DoctorPass123",
+  "phone": "+1987654321",
+  "role": "doctor",
+  "profileImage": "https://example.com/profiles/sarah.jpg"
+}
+
+###
+### 3. Register Admin User
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "fullName": "Admin User",
+  "email": "admin@digitalclinic.com",
+  "password": "AdminPass123",
+  "phone": "+1555000111",
+  "role": "admin"
+}
+
+###
+### ============================================
+### LOGIN TESTS
+### ============================================
+###
+
+### 4. Login - Patient
+# @name loginPatient
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "john.doe@example.com",
+  "password": "SecurePass123"
+}
+
+###
+### 5. Login - Doctor
+# @name loginDoctor
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "sarah.johnson@example.com",
+  "password": "DoctorPass123"
+}
+
+###
+### 6. Login - Admin
+# @name loginAdmin
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@digitalclinic.com",
+  "password": "AdminPass123"
+}
+
+###
+### ============================================
+### PROTECTED ENDPOINT TESTS (NEW)
+### ============================================
+###
+
+### 7. Get Current User Profile (With Valid Token)
+# First: Login above and copy the token to @authToken variable
+GET {{baseURL}}/api/auth/me
+Authorization: Bearer {{authToken}}
+
+###
+### 8. Get Current User - No Token (Should Fail - 401)
+GET {{baseURL}}/api/auth/me
+
+###
+### 9. Get Current User - Invalid Token Format (Should Fail - 401)
+GET {{baseURL}}/api/auth/me
+Authorization: InvalidFormat
+
+###
+### 10. Get Current User - Invalid Token (Should Fail - 401)
+GET {{baseURL}}/api/auth/me
+Authorization: Bearer invalid.token.here
+
+###
+### 11. Get Current User - Empty Token (Should Fail - 401)
+GET {{baseURL}}/api/auth/me
+Authorization: Bearer 
+
+###
+### ============================================
+### ERROR SCENARIO TESTS
+### ============================================
+###
+
+### Error: Missing Required Fields
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "fullName": "Test User",
+  "email": "test@example.com"
+}
+
+###
+### Error: Duplicate Email
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "fullName": "Duplicate User",
+  "email": "john.doe@example.com",
+  "password": "Password123",
+  "phone": "+1111111111",
+  "role": "patient"
+}
+
+###
+### Error: Invalid Email Format
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "fullName": "Invalid Email User",
+  "email": "invalidemail",
+  "password": "Password123",
+  "phone": "+1222222222",
+  "role": "patient"
+}
+
+###
+### Error: Password Too Short
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "fullName": "Short Password User",
+  "email": "shortpass@example.com",
+  "password": "Pass1",
+  "phone": "+1333333333",
+  "role": "patient"
+}
+
+###
+### Error: Invalid Role
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "fullName": "Invalid Role User",
+  "email": "invalidrole@example.com",
+  "password": "Password123",
+  "phone": "+1444444444",
+  "role": "superuser"
+}
+
+###
+### Error: Wrong Password (Login)
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "john.doe@example.com",
+  "password": "WrongPassword123"
+}
+
+###
+### Error: User Not Found (Login)
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "nonexistent@example.com",
+  "password": "SomePassword123"
+}
+
+###
+### Error: Missing Login Credentials
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "john.doe@example.com"
+}
+
+###

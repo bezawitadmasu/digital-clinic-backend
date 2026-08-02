@@ -75,6 +75,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ======================
+// Import Routes
+// ======================
+
+const authRoutes = require('./routes/authRoutes');
+
+// ======================
 // API Routes
 // ======================
 
@@ -103,14 +109,24 @@ app.get('/api', (req, res) => {
     endpoints: {
       health: '/',
       api: '/api',
+      auth: '/api/auth',
       // Future endpoints will be added here
-      // auth: '/api/v1/auth',
-      // patients: '/api/v1/patients',
-      // doctors: '/api/v1/doctors',
-      // appointments: '/api/v1/appointments'
+      // patients: '/api/patients',
+      // doctors: '/api/doctors',
+      // appointments: '/api/appointments'
     }
   });
 });
+
+// ======================
+// API Endpoints
+// ======================
+
+/**
+ * Authentication Routes
+ * Handles user registration, login, and authentication
+ */
+app.use('/api/auth', authRoutes);
 
 // ======================
 // 404 Handler
