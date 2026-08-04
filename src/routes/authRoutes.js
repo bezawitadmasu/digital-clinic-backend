@@ -9,6 +9,7 @@
  * - POST /api/auth/login - Login existing user
  * - GET /api/auth/me - Get current user profile (protected)
  * - PUT /api/auth/profile - Update user profile (protected)
+ * - PUT /api/auth/change-password - Change user password (protected)
  */
 
 const express = require('express');
@@ -58,6 +59,15 @@ router.get('/me', authMiddleware, authController.getCurrentUser.bind(authControl
  * @body    { fullName?, phone? }
  */
 router.put('/profile', authMiddleware, authController.updateProfile.bind(authController));
+
+/**
+ * @route   PUT /api/auth/change-password
+ * @desc    Change user password
+ * @access  Private (requires authentication)
+ * @header  Authorization: Bearer <token>
+ * @body    { currentPassword, newPassword }
+ */
+router.put('/change-password', authMiddleware, authController.changePassword.bind(authController));
 
 // Export the router
 module.exports = router;

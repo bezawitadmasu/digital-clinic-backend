@@ -324,6 +324,118 @@ class AuthController {
       next(error);
     }
   }
+
+  /**
+   * Change User Password
+   * 
+   * PUT /api/auth/change-password
+   * 
+   * Requires: Authorization: Bearer <token>
+   * 
+   * Request Body:
+   * {
+   *   "currentPassword": "OldPassword123",
+   *   "newPassword": "NewPassword123"
+   * }
+   * 
+   * Allows authenticated users to change their password.
+   * Requires current password verification for security.
+   * 
+   * @param {Object} req - Express request object (with req.user from authMiddleware)
+   * @param {Object} res - Express response object
+   * @param {Function} next - Express next middleware function
+   */
+  async changePassword(req, res, next) {
+    try {
+      // ============================================
+      // Step 1: Extract and Validate Input
+      // ============================================
+      
+      // Extract passwords from request body
+      const { currentPassword, newPassword } = req.body;
+
+      // Validate that both passwords are provided
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please provide both current password and new password'
+        });
+      }
+
+      // Validate new password length (basic validation)
+      // More detailed validation will be done by Mongoose schema
+      if (newPassword.length < 8) {
+        return res.status(400).json({
+          success: false,
+          message: 'New password must be at least 8 characters long'
+        });
+      }
+
+      // ============================================
+      // Step 2: Change Password
+      // ============================================
+      
+      // Get user ID from authenticated user (set by authMiddleware)
+      const userId = req.user._id;
+
+      // Call service to change password
+      // Service will verify current password and update to new password
+      const result = await authService.changePassword(userId, currentPassword, newPassword);
+
+      // Send success response
+      // Note: We don't return user data to avoid exposing sensitive information
+      res.status(200).json({
+        success: true,
+        message: result.message
+      });
+
+    } catch (error) {
+      // Handle unauthorized error (401) - incorrect current password
+      if (error.statusCode === 401) {
+        return res.status(401).json({
+          success: false,
+          message: error.message
+        });
+      }
+
+      // Handle bad request error (400) - validation errors
+      if (error.statusCode === 400) {
+        return res.status(400).json({
+          success: false,
+          message: error.message
+        });
+      }
+
+      // Handle forbidden error (403) - account inactive
+      if (error.statusCode === 403) {
+        return res.status(403).json({
+          success: false,
+          message: error.message
+        });
+      }
+
+      // Handle not found error (404)
+      if (error.statusCode === 404) {
+        return res.status(404).json({
+          success: false,
+          message: error.message
+        });
+      }
+
+      // Handle validation errors from Mongoose
+      if (error.name === 'ValidationError') {
+        const messages = Object.values(error.errors).map(err => err.message);
+        return res.status(400).json({
+          success: false,
+          message: 'Validation failed',
+          errors: messages
+        });
+      }
+
+      // Pass other errors to global error handler
+      next(error);
+    }
+  }
 }
 
 // Export a singleton instance

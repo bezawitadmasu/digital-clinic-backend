@@ -262,6 +262,73 @@ class AuthService {
     // Return updated user without password
     return user.toSafeObject();
   }
+
+  /**
+   * Change User Password
+   * 
+   * Allows authenticated users to change their password.
+   * Requires current password verification before updating.
+   * 
+   * @param {string} userId - User's MongoDB ObjectId
+   * @param {string} currentPassword - Current password for verification
+   * @param {string} newPassword - New password to set
+   * @returns {Promise<Object>} Success message
+   * @throws {Error} If user is not found, current password is incorrect, or validation fails
+   */
+  async changePassword(userId, currentPassword, newPassword) {
+    // Find user by ID and include password field (normally excluded)
+    const user = await User.findById(userId).select('+password');
+
+    if (!user) {
+      const error = new Error('User not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Check if user account is active
+    if (!user.isActive) {
+      const error = new Error('Cannot change password. Account is deactivated.');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    // Verify current password
+    // Use the comparePassword instance method from User model
+    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+
+    if (!isCurrentPasswordValid) {
+      const error = new Error('Current password is incorrect');
+      error.statusCode = 401; // Unauthorized
+      throw error;
+    }
+
+    // Validate new password (basic validation - detailed validation in User model)
+    if (newPassword.length < 8) {
+      const error = new Error('New password must be at least 8 characters long');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Check if new password is same as current password
+    const isSamePassword = await user.comparePassword(newPassword);
+    if (isSamePassword) {
+      const error = new Error('New password must be different from current password');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Update password field
+    // The pre-save hook in User model will automatically hash the password
+    user.password = newPassword;
+
+    // Save user (triggers password hashing via pre-save hook and Mongoose validation)
+    await user.save();
+
+    // Return success (without returning user data or password)
+    return {
+      message: 'Password changed successfully'
+    };
+  }
 }
 
 // Export a singleton instance
